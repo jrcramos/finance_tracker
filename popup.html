@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finance Tracker & Ticker HUD</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #131b2e;
+      --hover: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --green: #22c55e;
+      --green-bg: rgba(34, 197, 94, 0.15);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.15);
+      --accent: #38bdf8;
+      --border: #1e293b;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 400px;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      padding: 14px;
+      font-size: 13px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .title {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--green);
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn-icon {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.15s;
+    }
+    .btn-icon:hover {
+      color: var(--text);
+      border-color: var(--accent);
+    }
+    .pinned-card {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .pinned-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .pinned-price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .pinned-price {
+      font-size: 22px;
+      font-weight: 800;
+      font-family: monospace;
+      letter-spacing: -0.5px;
+    }
+    .badge-pill {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 700;
+      font-family: monospace;
+    }
+    .badge-pill.up { background: var(--green-bg); color: var(--green); }
+    .badge-pill.down { background: var(--red-bg); color: var(--red); }
+    .pinned-stats {
+      display: flex;
+      gap: 14px;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+    .watchlist {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .watch-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      transition: background 0.15s;
+    }
+    .watch-row:hover {
+      background: var(--hover);
+    }
+    .watch-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pin-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      opacity: 0.3;
+      transition: opacity 0.15s;
+    }
+    .pin-btn.active {
+      opacity: 1;
+      color: #fbbf24;
+    }
+    .watch-name {
+      font-weight: 700;
+      font-size: 12.5px;
+    }
+    .watch-sub {
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+    .watch-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .watch-price {
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 13px;
+      text-align: right;
+    }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">
+      <div class="live-dot"></div>
+      <span>Finance Tracker HUD</span>
+    </div>
+    <div class="controls">
+      <button class="btn-icon" id="refreshBtn" title="Refresh Live Prices">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <div class="pinned-card" id="pinnedCard">
+    <div class="pinned-header">
+      <span id="pinnedSymbol">XAU/USD (Gold Spot)</span>
+      <span>⭐ Pinned to Badge</span>
+    </div>
+    <div class="pinned-price-row">
+      <span class="pinned-price" id="pinnedPrice">$2,912.40</span>
+      <span class="badge-pill up" id="pinnedChange">+0.85%</span>
+    </div>
+    <div class="pinned-stats">
+      <span>24h High: <strong id="pinnedHigh">$2,925.00</strong></span>
+      <span>24h Low: <strong id="pinnedLow">$2,890.10</strong></span>
+    </div>
+  </div>
+
+  <div class="section-title">Watchlist</div>
+  <div class="watchlist" id="watchlistContainer">
+    <!-- Dynamic rows populated by popup.js -->
+  </div>
+
+  <div class="footer">
+    <label style="cursor: pointer;">
+      Badge: 
+      <select id="badgeModeSelect" style="background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 3px; padding: 1px 4px; font-size: 10.5px;">
+        <option value="price">Price ($)</option>
+        <option value="change">% Change</option>
+      </select>
+    </label>
+    <span id="lastUpdated">Updated: Just now</span>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
