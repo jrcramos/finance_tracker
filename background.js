@@ -36,16 +36,16 @@ async function updatePricesAndBadge() {
       CONFIG.STORAGE_KEYS.alerts
     ]);
 
-    const watchlist = result[CONFIG.STORAGE_KEYS.watchlist] || CONFIG.DEFAULT_WATCHLIST;
-    const pinnedId = result[CONFIG.STORAGE_KEYS.pinnedAsset] || 'BTCUSDT';
-    const badgeMode = result[CONFIG.STORAGE_KEYS.badgeMode] || 'price';
+    const watchlist = mergeDefaultWatchlist(result[CONFIG.STORAGE_KEYS.watchlist]);
+    const pinnedId = result[CONFIG.STORAGE_KEYS.pinnedAsset] || CONFIG.DEFAULT_PINNED_ASSET;
+    const badgeMode = result[CONFIG.STORAGE_KEYS.badgeMode] || CONFIG.DEFAULT_BADGE_MODE;
 
-    // Fetch pinned ticker from public Binance API (free, fast, no API key needed)
-    // For gold, PAXGUSDT tracks 1 troy ounce of gold directly 1:1 backed
-    const targetSymbol = pinnedId === 'XAUUSDT' ? 'PAXGUSDT' : pinnedId;
-    const res = await fetch(`${CONFIG.APIS.binanceTicker}${targetSymbol}`);
-    if (!res.ok) return;
-    const data = await res.json();
+    const prices = Object.fromEntries(await Promise.all(watchlist.map(async item => [
+      item.id,
+      await fetchTicker(item)
+    ])));
+    const data = prices[pinnedId];
+    if (!data) return;
 
     const price = parseFloat(data.lastPrice);
     const change = parseFloat(data.priceChangePercent);
@@ -67,30 +67,73 @@ async function updatePricesAndBadge() {
       color: change >= 0 ? '#16a34a' : '#dc2626'
     });
 
+    await chrome.storage.local.set({
+      [CONFIG.STORAGE_KEYS.watchlist]: watchlist,
+      ft_latest_prices: prices,
+      ft_last_updated: Date.now()
+    });
+
     // Check alerts
     const alerts = result[CONFIG.STORAGE_KEYS.alerts] || [];
-    checkAlerts(alerts, pinnedId, price);
+    checkAlerts(alerts, prices);
 
   } catch (err) {
     console.warn('Price update error:', err);
   }
 }
 
-function checkAlerts(alerts, symbol, currentPrice) {
-  alerts.forEach(alert => {
-    if (alert.symbol === symbol && !alert.triggered) {
+function mergeDefaultWatchlist(savedWatchlist) {
+  if (!Array.isArray(savedWatchlist)) return CONFIG.DEFAULT_WATCHLIST;
+  const savedIds = new Set(savedWatchlist.map(item => item.id));
+  return [...savedWatchlist, ...CONFIG.DEFAULT_WATCHLIST.filter(item => !savedIds.has(item.id))];
+}
+
+async function fetchTicker(item) {
+  try {
+    if (item.provider === 'yahoo') {
+      const response = await fetch(`${CONFIG.APIS.yahooChart}${encodeURIComponent(item.yahooSymbol)}?range=1d&interval=1m`);
+      if (!response.ok) return null;
+      const chart = (await response.json()).chart?.result?.[0];
+      const meta = chart?.meta;
+      const price = meta?.regularMarketPrice;
+      const previous = meta?.chartPreviousClose;
+      if (typeof price !== 'number' || typeof previous !== 'number') return null;
+      const change = ((price - previous) / previous) * 100;
+      const high = Math.max(...(chart.indicators?.quote?.[0]?.high || [price]).filter(Number.isFinite));
+      const low = Math.min(...(chart.indicators?.quote?.[0]?.low || [price]).filter(Number.isFinite));
+      return { lastPrice: String(price), priceChangePercent: String(change), highPrice: String(high), lowPrice: String(low) };
+    }
+    const symbol = item.id === 'XAUUSDT' ? 'PAXGUSDT' : item.id;
+    const response = await fetch(`${CONFIG.APIS.binanceTicker}${symbol}`);
+    return response.ok ? await response.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function checkAlerts(alerts, prices) {
+  let changed = false;
+  for (const alert of alerts) {
+    if (!alert.triggered) {
+      const ticker = prices[alert.symbol];
+      const currentPrice = ticker ? parseFloat(ticker.lastPrice) : null;
+      if (currentPrice === null || Number.isNaN(currentPrice)) continue;
       if ((alert.condition === 'above' && currentPrice >= alert.target) ||
           (alert.condition === 'below' && currentPrice <= alert.target)) {
-        chrome.notifications.create({
+        await chrome.notifications.create({
           type: 'basic',
-          iconUrl: 'icons/icon48.png',
-          title: `🔔 Price Alert: ${symbol}`,
-          message: `${symbol} reached ${currentPrice.toLocaleString()} (Target: ${alert.target.toLocaleString()})`
+          iconUrl: 'icons/finance-hud.svg',
+          title: `🔔 Price Alert: ${alert.symbol}`,
+          message: `${alert.symbol} reached ${currentPrice.toLocaleString()} (Target: ${alert.target.toLocaleString()})`,
+          priority: 2,
+          requireInteraction: true
         });
         alert.triggered = true;
+        changed = true;
       }
     }
-  });
+  }
+  if (changed) await chrome.storage.local.set({ [CONFIG.STORAGE_KEYS.alerts]: alerts });
 }
 
 // Listen for refresh requests from popup
