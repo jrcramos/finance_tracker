@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Finance Tracker & Ticker HUD",
-  "version": "1.0",
-  "description": "Real-time Gold (XAU/USD), Crypto (BTC/ETH), and Forex/DXY tracker with live toolbar badge, price alerts, and mini sparkline charts.",
+  "name": "Finance Terminal & Ticker HUD Pro",
+  "version": "2.0",
+  "description": "Professional real-time Finance Terminal & Ticker HUD: multi-asset live tracking, continuous rolling ticker tape, zero-scroll technical charting, smart toolbar badge, USD portfolio tracker, and audio alerts.",
   "permissions": [
     "storage",
     "alarms",
