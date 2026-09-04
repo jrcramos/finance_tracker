@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finance Terminal Workstation Pro</title>
+  <link rel="stylesheet" href="terminal.css">
+  <style>
+    /* Fullscreen workstation enhancements */
+    body {
+      background: var(--bg-main);
+      height: 100vh;
+      overflow: hidden;
+    }
+    .widescreen-header {
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .main-terminal-stage {
+      height: 380px !important;
+    }
+    .order-depth-box {
+      background: var(--bg-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .depth-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      padding: 2px 4px;
+      position: relative;
+    }
+    .depth-bar-bid {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      background: rgba(16, 185, 129, 0.15);
+      border-radius: 2px;
+      z-index: 1;
+    }
+    .depth-bar-ask {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      background: rgba(244, 63, 94, 0.15);
+      border-radius: 2px;
+      z-index: 1;
+    }
+    .depth-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+  </style>
+</head>
+<body data-mode="dashboard">
+  <div class="dashboard-mode" id="dashboardRoot">
+    
+    <!-- Workstation Top Header -->
+    <header class="widescreen-header">
+      <div class="brand-group">
+        <div class="brand-logo-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title" style="font-size: 15px;">
+            <span>FINANCE TERMINAL WORKSTATION</span>
+            <span class="brand-tag">PRO DESK</span>
+          </div>
+        </div>
+        <div class="live-beacon" style="margin-left: 10px;">
+          <span class="beacon-dot"></span>
+          <span>WEBSOCKET LIVE</span>
+        </div>
+      </div>
+
+      <!-- Center Ticker Tape -->
+      <div style="width: 460px; margin: 0 20px;">
+        <div class="marquee-container" style="margin-bottom: 0; padding: 4px 0;">
+          <div class="marquee-track" id="marqueeTrack">
+            <!-- Dynamic items -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="header-actions">
+        <!-- Audio Chime Toggle -->
+        <button class="btn-icon" id="soundToggleBtn" title="Toggle Sound">
+          <svg id="soundOnIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          <svg id="soundOffIcon" style="display:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+        </button>
+
+        <!-- Theme Picker -->
+        <select class="filter-select" id="settingTheme" style="font-size: 11px;">
+          <option value="obsidian">Obsidian</option>
+          <option value="cyber">Cyberpunk</option>
+          <option value="midnight">Midnight</option>
+          <option value="light">Crisp Light</option>
+        </select>
+
+        <!-- Currency -->
+        <select class="filter-select" id="settingCurrency" style="font-size: 11px;">
+          <option value="USD">USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+
+        <!-- Refresh -->
+        <button class="btn-icon" id="refreshBtn" title="Refresh Now">
+          <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 3-Column Workstation Grid -->
+    <div class="dashboard-grid">
+      
+      <!-- COLUMN 1: MARKET SCREENER & WATCHLIST -->
+      <aside class="dashboard-panel col-left">
+        <div class="section-heading" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <span>Market Screener</span>
+          <button class="btn-small" id="openAddAssetModalBtn">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Add Asset
+          </button>
+        </div>
+
+        <div class="screener-toolbar">
+          <div class="search-input-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="search" class="search-input" id="screenerSearch" placeholder="Search markets...">
+          </div>
+          <select class="filter-select" id="screenerTypeFilter">
+            <option value="all">All</option>
+            <option value="crypto">Crypto</option>
+            <option value="commodity">Metals</option>
+            <option value="index">Indices</option>
+            <option value="forex">Forex</option>
+          </select>
+        </div>
+
+        <div class="watchlist-list" id="watchlistContainer" style="flex: 1; overflow-y: auto;">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Sentiment Meter in Col 1 -->
+        <div class="intel-card" style="margin-top: 10px; background: var(--bg-surface-elevated);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="intel-label">Crypto Fear & Greed Index</span>
+            <span class="intel-rating" id="fngSignal" style="color: var(--bull);">Greed</span>
+          </div>
+          <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
+            <span class="intel-value" id="fngValue" style="font-size: 18px;">68</span>
+            <span style="font-size: 10px; color: var(--text-tertiary);">Score out of 100</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- COLUMN 2: PRIMARY PRO TERMINAL CHART & DEPTH -->
+      <main class="dashboard-panel col-center">
+        <!-- Hero Header Row -->
+        <div class="hero-top-row">
+          <div class="hero-asset-meta">
+            <span class="hero-symbol" id="heroSymbol" style="font-size: 20px;">XAU/USD</span>
+            <span class="hero-name" id="heroName" style="font-size: 13px;">Gold Spot</span>
+            <div class="hero-pin-badge" id="heroBadgeStatus">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              <span>BROWSER BADGE</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: baseline; gap: 12px;">
+            <span class="hero-price" id="heroPrice" style="font-size: 30px;">$2,912.40</span>
+            <span class="delta-badge up" id="heroDelta" style="font-size: 14px; padding: 5px 12px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+              <span id="heroDeltaVal">+0.85%</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- 24h High/Low -->
+        <div class="range-bar-wrap" style="margin-bottom: 14px;">
+          <div class="range-labels">
+            <span>24h Range Low: <strong id="heroLowPrice">$2,892.10</strong></span>
+            <span>24h Range High: <strong id="heroHighPrice">$2,928.40</strong></span>
+          </div>
+          <div class="range-track" style="height: 6px;">
+            <div class="range-fill" id="rangeFill" style="width: 68%;"></div>
+            <div class="range-pin" id="rangePin" style="left: 68%; width: 10px; height: 10px;"></div>
+          </div>
+        </div>
+
+        <!-- Chart Controls -->
+        <div class="chart-controls-bar">
+          <div class="chart-type-toggle">
+            <button class="chart-type-btn active" data-type="area" id="btnChartArea" title="Area Spline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            </button>
+            <button class="chart-type-btn" data-type="candle" id="btnChartCandle" title="Candlestick OHLC">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="6" width="4" height="12" rx="1"></rect><line x1="7" y1="2" x2="7" y2="6"></line><line x1="7" y1="18" x2="7" y2="22"></line><rect x="15" y="4" width="4" height="10" rx="1"></rect><line x1="17" y1="1" x2="17" y2="4"></line><line x1="17" y1="14" x2="17" y2="21"></line></svg>
+            </button>
+          </div>
+
+          <div class="timeframe-group">
+            <button class="timeframe-btn active" data-range="1h">1H</button>
+            <button class="timeframe-btn" data-range="24h">24H</button>
+            <button class="timeframe-btn" data-range="7d">7D</button>
+            <button class="timeframe-btn" data-range="1m">1M</button>
+            <button class="timeframe-btn" data-range="1y">1Y</button>
+          </div>
+        </div>
+
+        <!-- Large Interactive Chart Canvas -->
+        <div class="chart-stage main-terminal-stage" id="chartStage">
+          <canvas class="chart-canvas" id="mainChartCanvas"></canvas>
+          <div class="chart-tooltip" id="chartTooltip">
+            <div class="tooltip-time" id="tooltipTime">--:--</div>
+            <div class="tooltip-price" id="tooltipPrice">$0.00</div>
+          </div>
+        </div>
+
+        <!-- Technical Intelligence Grid & Meter -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 12px;">
+          <div class="intel-grid" style="margin-top: 0;">
+            <div class="intel-card">
+              <span class="intel-label">Moving Averages</span>
+              <span class="intel-value" id="maValues">$2,890 / $2,865</span>
+              <span class="intel-rating" id="maSignal" style="color: var(--bull);">Bullish Cross</span>
+            </div>
+            <div class="intel-card">
+              <span class="intel-label">RSI (14-Period)</span>
+              <span class="intel-value" id="rsiValue">58.4</span>
+              <span class="intel-rating" id="rsiSignal" style="color: var(--text-secondary);">Neutral Momentum</span>
+            </div>
+            <div class="intel-card">
+              <span class="intel-label">24h Volatility</span>
+              <span class="intel-value" id="volatilityVal">1.64%</span>
+              <span class="intel-rating" style="color: var(--accent-cyan);">Moderate</span>
+            </div>
+          </div>
+
+          <div class="technical-meter-card" style="margin-bottom: 0;">
+            <div class="meter-left">
+              <span class="meter-title">Technical Gauge</span>
+              <span class="meter-status bull" id="technicalMeterText">STRONG BUY</span>
+            </div>
+            <div class="meter-bar-container">
+              <div class="meter-segment" id="segStrongSell"></div>
+              <div class="meter-segment" id="segSell"></div>
+              <div class="meter-segment" id="segNeutral"></div>
+              <div class="meter-segment" id="segBuy"></div>
+              <div class="meter-segment active-strong-buy" id="segStrongBuy"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Book Depth Simulation -->
+        <div class="order-depth-box">
+          <div class="section-heading" style="margin-bottom: 6px; font-size: 10.5px;">Live Market Order Depth</div>
+          <div id="orderBookList">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </main>
+
+      <!-- COLUMN 3: PORTFOLIO, ALERTS & TOOLS -->
+      <aside class="dashboard-panel col-right">
+        <!-- Portfolio Hero -->
+        <div class="portfolio-hero" style="padding: 14px;">
+          <div class="portfolio-label">Total Portfolio Net Worth</div>
+          <div class="portfolio-total" id="portfolioTotalVal" style="font-size: 24px;">$48,912.45</div>
+          <div class="portfolio-metrics">
+            <div class="p-metric">
+              <span class="p-metric-label">24h P&L</span>
+              <span class="p-metric-val" id="portfolio24hPnl" style="color: var(--bull);">+$1,140.20 (+2.38%)</span>
+            </div>
+            <div class="p-metric">
+              <span class="p-metric-label">All-Time Return</span>
+              <span class="p-metric-val" id="portfolioAllTimePnl" style="color: var(--bull);">+$8,450.00 (+20.8%)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Donut Allocation -->
+        <div class="allocation-wrap">
+          <div class="donut-stage" style="width: 70px; height: 70px;">
+            <svg class="donut-svg" viewBox="0 0 36 36" id="portfolioDonutSvg"></svg>
+          </div>
+          <div class="donut-legend" id="donutLegend" style="font-size: 10.5px;"></div>
+        </div>
+
+        <!-- Holdings List -->
+        <div class="holdings-header" style="margin-top: 6px;">
+          <span class="section-heading">Holdings</span>
+          <button class="btn-small" id="openAddHoldingBtn">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Add
+          </button>
+        </div>
+        <div id="holdingsListContainer" style="max-height: 180px; overflow-y: auto; margin-bottom: 12px;"></div>
+
+        <!-- Quick Price Alerts -->
+        <div class="section-heading" style="margin-bottom: 6px;">Price Alerts</div>
+        <form class="alert-builder-form" id="alertBuilderForm" style="margin-bottom: 8px;">
+          <div class="alert-input-grid">
+            <select id="alertAssetSelect" aria-label="Asset"></select>
+            <select id="alertConditionSelect" aria-label="Condition">
+              <option value="above">Above (>=)</option>
+              <option value="below">Below (<=)</option>
+            </select>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <input type="number" step="any" min="0" id="alertTargetInput" placeholder="Target Price" required>
+            <button type="submit" class="btn-primary" style="width: 70px; padding: 6px 10px;">Set</button>
+          </div>
+        </form>
+        <div class="active-alerts-list" id="activeAlertsList" style="flex: 1; overflow-y: auto;"></div>
+      </aside>
+
+    </div>
+
+    <!-- Modals -->
+    <!-- 1. Add Asset Modal -->
+    <div class="modal-overlay" id="addAssetModal">
+      <div class="modal-box">
+        <div class="modal-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Custom Asset
+        </div>
+        <div class="modal-inputs">
+          <input type="text" id="customSymbolInput" placeholder="Symbol (e.g. DOGE, NVDA, TSLA)" autocomplete="off">
+          <input type="text" id="customNameInput" placeholder="Asset Name (e.g. Dogecoin)" autocomplete="off">
+          <select id="customTypeInput">
+            <option value="crypto">Cryptocurrency</option>
+            <option value="commodity">Commodity / Metal</option>
+            <option value="index">Index / Stock</option>
+            <option value="forex">Forex Pair</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="cancelAddAssetBtn">Cancel</button>
+          <button class="btn-primary" id="confirmAddAssetBtn" style="width: auto;">Add to Watchlist</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Add / Update Holding Modal -->
+    <div class="modal-overlay" id="addHoldingModal">
+      <div class="modal-box">
+        <div class="modal-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          <span id="holdingModalTitleText">Track Asset Value</span>
+        </div>
+        <input type="hidden" id="editingHoldingId" value="">
+        <div class="modal-inputs">
+          <label style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">1. Choose Asset</label>
+          <select id="holdingAssetSelect"></select>
+          <div id="holdingCurrentPriceInfo" style="font-size: 11px; font-family: var(--font-mono); color: var(--accent-cyan); margin-top: -4px; margin-bottom: 6px;">
+            Current Market Price: $0.00
+          </div>
+
+          <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+            <button type="button" class="btn-small active" id="modeUsdBtn" style="flex: 1; justify-content: center; font-size: 10px; padding: 5px 6px;">💵 In USD ($)</button>
+            <button type="button" class="btn-small" id="modeUnitsBtn" style="flex: 1; justify-content: center; font-size: 10px; padding: 5px 6px;">🪙 By Coin/Units</button>
+          </div>
+
+          <!-- Mode 1: USD Amount (Intuitive & Default) -->
+          <div id="holdingUsdContainer">
+            <label style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">2. How much you hold in USD right now</label>
+            <input type="number" step="any" min="0" id="holdingUsdAmountInput" placeholder="e.g. 500 or 2500" autocomplete="off">
+            <div id="holdingUsdCalcPreview" style="font-size: 10.5px; font-family: var(--font-mono); color: var(--text-secondary); margin-top: 4px;">
+              ≈ 0.00 units locked at current price
+            </div>
+          </div>
+
+          <!-- Mode 2: By exact units / custom price (Optional) -->
+          <div id="holdingUnitsContainer" style="display: none;">
+            <label style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">Exact units owned</label>
+            <input type="number" step="any" min="0" id="holdingAmountInput" placeholder="Quantity (e.g. 0.035)" autocomplete="off">
+            <label style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; margin-top: 6px;">Buy Price per unit ($)</label>
+            <input type="number" step="any" min="0" id="holdingBuyPriceInput" placeholder="Price per unit ($)" autocomplete="off">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="cancelAddHoldingBtn">Cancel</button>
+          <button class="btn-primary" id="confirmAddHoldingBtn" style="width: auto;">Start Tracking</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="config.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

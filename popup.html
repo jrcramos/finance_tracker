@@ -3,309 +3,463 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Finance Tracker & Ticker HUD</title>
-  <style>
-    :root {
-      --bg: #090d16;
-      --card: #131b2e;
-      --hover: #1e293b;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --green: #22c55e;
-      --green-bg: rgba(34, 197, 94, 0.15);
-      --red: #ef4444;
-      --red-bg: rgba(239, 68, 68, 0.15);
-      --accent: #38bdf8;
-      --border: #1e293b;
-      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      width: 400px;
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      padding: 14px;
-      font-size: 13px;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-    .title {
-      font-size: 14px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .live-dot {
-      width: 7px;
-      height: 7px;
-      background: var(--green);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--green);
-    }
-    .controls {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .btn-icon {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 4px 7px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 11px;
-      transition: all 0.15s;
-    }
-    .btn-icon:hover {
-      color: var(--text);
-      border-color: var(--accent);
-    }
-    .pinned-card {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 12px;
-    }
-    .pinned-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11.5px;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-    .pinned-price-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
-    .pinned-price {
-      font-size: 22px;
-      font-weight: 800;
-      font-family: monospace;
-      letter-spacing: -0.5px;
-    }
-    .badge-pill {
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 11.5px;
-      font-weight: 700;
-      font-family: monospace;
-    }
-    .badge-pill.up { background: var(--green-bg); color: var(--green); }
-    .badge-pill.down { background: var(--red-bg); color: var(--red); }
-    .pinned-stats {
-      display: flex;
-      gap: 14px;
-      margin-top: 8px;
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-    .chart-range { display: flex; gap: 3px; }
-    .chart-range button { background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 3px; padding: 2px 6px; font-size: 10px; cursor: pointer; }
-    .chart-range button.active { background: var(--accent); color: #082f49; border-color: var(--accent); font-weight: 700; }
-    #sparkline { width: 100%; height: 58px; display: block; margin-top: 4px; overflow: visible; }
-    .chart-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .chart-area { fill: rgba(56, 189, 248, 0.12); }
-    .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      letter-spacing: 0.5px;
-    }
-    .watchlist {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-    .toolbar { display: flex; gap: 6px; margin-bottom: 10px; }
-    .toolbar input:not([type="file"]), .toolbar select, .alert-form input, .alert-form select {
-      background: var(--card); color: var(--text); border: 1px solid var(--border);
-      border-radius: 4px; padding: 6px 7px; font-size: 11px; min-width: 0;
-    }
-    .toolbar input { flex: 1; }
-    .btn { background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 6px 9px; font-size: 11px; cursor: pointer; transition: all 0.15s; }
-    .btn:hover { background: var(--hover); border-color: var(--accent); }
-    .btn-primary { background: var(--accent); color: #082f49; font-weight: 700; }
-    .btn-primary:hover { opacity: 0.9; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
-    .modal-overlay.active { display: flex; }
-    .modal { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; width: 320px; max-width: 90vw; }
-    .modal h3 { font-size: 14px; margin-bottom: 12px; }
-    .modal input { width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); }
-    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
-    .watch-row[draggable="true"] { cursor: grab; }
-    .watch-row[draggable="true"]:active { cursor: grabbing; }
-    .watch-row.drag-over { border-color: var(--accent); background: var(--hover); }
-    .import-export { display: flex; gap: 6px; }
-    #importFile { display: none; }
-    .alert-panel { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 9px; margin-bottom: 12px; }
-    .alert-form { display: flex; gap: 5px; }
-    .alert-form input { width: 82px; }
-    .alert-form button { background: var(--accent); color: #082f49; border: 0; border-radius: 4px; padding: 5px 8px; font-weight: 700; cursor: pointer; }
-    .alert-list { margin-top: 7px; color: var(--text-muted); font-size: 10px; }
-    .alert-item { display: flex; justify-content: space-between; padding-top: 4px; }
-    .remove-alert { color: var(--red); cursor: pointer; border: 0; background: none; }
-    .empty { color: var(--text-muted); padding: 12px; text-align: center; }
-    .watch-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 10px;
-      transition: background 0.15s;
-    }
-    .watch-row:hover {
-      background: var(--hover);
-    }
-    .watch-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .pin-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 13px;
-      opacity: 0.3;
-      transition: opacity 0.15s;
-    }
-    .pin-btn.active {
-      opacity: 1;
-      color: #fbbf24;
-    }
-    .watch-name {
-      font-weight: 700;
-      font-size: 12.5px;
-    }
-    .watch-sub {
-      font-size: 10.5px;
-      color: var(--text-muted);
-    }
-    .watch-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .watch-price {
-      font-family: monospace;
-      font-weight: 700;
-      font-size: 13px;
-      text-align: right;
-    }
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 8px;
-      border-top: 1px solid var(--border);
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-  </style>
+  <title>Finance Terminal & Ticker HUD</title>
+  <link rel="stylesheet" href="terminal.css">
 </head>
 <body>
-  <div class="header">
-    <div class="title">
-      <div class="live-dot"></div>
-      <span>Finance Tracker HUD</span>
-    </div>
-    <div class="controls">
-      <button class="btn-icon" id="refreshBtn" title="Refresh Live Prices">🔄</button>
-      <button class="btn-icon" id="addAssetBtn" title="Add Custom Asset">➕</button>
-      <button class="btn-icon" id="exportBtn" title="Export Watchlist">📤</button>
-      <button class="btn-icon" id="importBtn" title="Import Watchlist">📥</button>
-    </div>
-  </div>
+  <div class="app-container popup-mode" id="appRoot">
+    
+    <!-- Terminal Header -->
+    <header class="terminal-header">
+      <div class="brand-group">
+        <div class="brand-logo-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">
+            <span>FINANCE HUD</span>
+            <span class="brand-tag">PRO</span>
+          </div>
+        </div>
+        <div class="live-beacon">
+          <span class="beacon-dot"></span>
+          <span>LIVE</span>
+        </div>
+      </div>
 
-  <div class="pinned-card" id="pinnedCard">
-    <div class="pinned-header">
-      <span id="pinnedSymbol">XAU/USD (Gold Spot)</span>
-      <span>⭐ Pinned to Badge</span>
-    </div>
-    <div class="pinned-price-row">
-      <span class="pinned-price" id="pinnedPrice">$2,912.40</span>
-      <span class="badge-pill up" id="pinnedChange">+0.85%</span>
-    </div>
-    <div class="pinned-stats">
-      <span>24h High: <strong id="pinnedHigh">$2,925.00</strong></span>
-      <span>24h Low: <strong id="pinnedLow">$2,890.10</strong></span>
-    </div>
-    <div class="signals-row" style="display:flex;gap:10px;margin-top:8px;font-size:10px;color:var(--text-muted);">
-      <span>MA20: <strong id="ma20" style="color:var(--text);">—</strong></span>
-      <span>MA50: <strong id="ma50" style="color:var(--text);">—</strong></span>
-      <span>RSI: <strong id="rsi" style="color:var(--text);">—</strong></span>
-    </div>
-    <div class="chart-header"><span class="watch-sub">Price history</span><div class="chart-range"><button data-range="1d" class="active">1D</button><button data-range="7d">7D</button><button data-range="1m">1M</button><button data-range="3m">3M</button><button data-range="1y">1Y</button></div></div>
-    <svg id="sparkline" viewBox="0 0 360 58" role="img" aria-label="Price history chart"></svg>
-  </div>
+      <div class="header-actions">
+        <!-- Audio Chime Toggle -->
+        <button class="btn-icon" id="soundToggleBtn" title="Toggle Alert Audio Chimes">
+          <svg id="soundOnIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="soundOffIcon" style="display:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+            <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+            <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
 
-  <div class="modal-overlay" id="addAssetModal">
-    <div class="modal">
-      <h3>Add Custom Asset</h3>
-      <input type="text" id="customSymbol" placeholder="Symbol (e.g., DOGE, ADA, TSLA)" autocomplete="off">
-      <input type="text" id="customName" placeholder="Display name (optional)" autocomplete="off">
-      <div class="modal-actions">
-        <button class="btn" id="cancelAddAsset">Cancel</button>
-        <button class="btn btn-primary" id="confirmAddAsset">Add Asset</button>
+        <!-- Popout to Fullscreen Terminal -->
+        <button class="btn-icon" id="popoutTerminalBtn" title="Open Full Workstation Terminal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+        </button>
+
+        <!-- Refresh Button -->
+        <button class="btn-icon" id="refreshBtn" title="Refresh Live Data">
+          <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Top Scrolling Ticker Tape Marquee -->
+    <div class="marquee-container" id="marqueeContainer">
+      <div class="marquee-track" id="marqueeTrack">
+        <div class="ticker-item"><span class="ticker-sym">XAU/USD</span><span class="ticker-val">$2,912.40</span><span class="ticker-delta up">+0.85%</span></div>
+        <div class="ticker-item"><span class="ticker-sym">BTC/USD</span><span class="ticker-val">$79,365.75</span><span class="ticker-delta up">+0.78%</span></div>
+        <div class="ticker-item"><span class="ticker-sym">ETH/USD</span><span class="ticker-val">$2,850.00</span><span class="ticker-delta down">-0.45%</span></div>
+        <div class="ticker-item"><span class="ticker-sym">S&P 500</span><span class="ticker-val">5,980.20</span><span class="ticker-delta up">+0.32%</span></div>
+        <div class="ticker-item"><span class="ticker-sym">DXY</span><span class="ticker-val">104.25</span><span class="ticker-delta down">-0.15%</span></div>
       </div>
     </div>
-  </div>
 
-  <input type="file" id="importFile" accept=".json">
+    <!-- Navigation Tab Bar -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="nav-tab-btn active" data-tab="terminal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        Terminal
+      </button>
+      <button class="nav-tab-btn" data-tab="watchlist">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        Watchlist
+      </button>
+      <button class="nav-tab-btn" data-tab="portfolio">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+        Portfolio
+      </button>
+      <button class="nav-tab-btn" data-tab="alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        Alerts
+      </button>
+      <button class="nav-tab-btn" data-tab="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
+      </button>
+    </nav>
 
-  <div class="section-title">Watchlist</div>
-  <div class="toolbar">
-    <input id="searchInput" type="search" placeholder="Search assets...">
-    <select id="typeFilter" title="Filter asset type">
-      <option value="all">All types</option><option value="commodity">Commodities</option>
-      <option value="crypto">Crypto</option><option value="index">Indices</option><option value="forex">Forex</option>
-    </select>
-  </div>
-  <div class="watchlist" id="watchlistContainer">
-    <!-- Dynamic rows populated by popup.js -->
-  </div>
+    <!-- ==========================================
+         TAB 1: TERMINAL / PRO CHART
+         ========================================== -->
+    <div class="tab-content active" id="tab-terminal">
+      <!-- Hero Asset Card -->
+      <div class="hero-card" id="heroCard">
+        <div class="hero-glow"></div>
+        <div class="hero-top-row">
+          <div class="hero-asset-meta">
+            <span class="hero-symbol" id="heroSymbol">XAU/USD</span>
+            <span class="hero-name" id="heroName">Gold Spot</span>
+          </div>
+          <div class="hero-pin-badge" id="heroBadgeStatus">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            <span>BADGE HUD</span>
+          </div>
+        </div>
 
-  <div class="alert-panel">
-    <div class="section-title">Price alerts</div>
-    <form class="alert-form" id="alertForm">
-      <select id="alertAsset" aria-label="Alert asset"></select>
-      <select id="alertCondition" aria-label="Alert condition"><option value="above">Above</option><option value="below">Below</option></select>
-      <input id="alertTarget" type="number" min="0" step="any" placeholder="Target">
-      <button type="submit">Add</button>
-    </form>
-    <div class="alert-list" id="alertList">No active alerts.</div>
-  </div>
+        <div class="hero-price-row">
+          <div class="hero-price-group">
+            <span class="hero-price" id="heroPrice">$2,912.40</span>
+            <span class="delta-badge up" id="heroDelta">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+              <span id="heroDeltaVal">+0.85%</span>
+            </span>
+          </div>
 
-  <div class="footer">
-    <label style="cursor: pointer;">
-      Badge: 
-      <select id="badgeModeSelect" style="background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 3px; padding: 1px 4px; font-size: 10.5px;">
-        <option value="price">Price ($)</option>
-        <option value="change">% Change</option>
-      </select>
-    </label>
-    <label style="cursor: pointer;">
-      Theme: <select id="themeSelect"><option value="dark">Dark</option><option value="light">Light</option></select>
-    </label>
-    <label>Poll: <select id="intervalSelect"><option value="1">1m</option><option value="5">5m</option><option value="15">15m</option></select></label>
-    <span id="lastUpdated">Updated: Just now</span>
+          <!-- 24h High / Low Range Slider (Side-by-side with price) -->
+          <div class="range-bar-wrap">
+            <div class="range-labels">
+              <span>24h L: <strong id="heroLowPrice">$2,892.10</strong></span>
+              <span>24h H: <strong id="heroHighPrice">$2,928.40</strong></span>
+            </div>
+            <div class="range-track">
+              <div class="range-fill" id="rangeFill" style="width: 68%;"></div>
+              <div class="range-pin" id="rangePin" style="left: 68%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart Controls -->
+        <div class="chart-controls-bar">
+          <div class="chart-type-toggle">
+            <button class="chart-type-btn active" data-type="area" id="btnChartArea" title="Area Spline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            </button>
+            <button class="chart-type-btn" data-type="candle" id="btnChartCandle" title="Candlestick OHLC">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="6" width="4" height="12" rx="1"></rect><line x1="7" y1="2" x2="7" y2="6"></line><line x1="7" y1="18" x2="7" y2="22"></line><rect x="15" y="4" width="4" height="10" rx="1"></rect><line x1="17" y1="1" x2="17" y2="4"></line><line x1="17" y1="14" x2="17" y2="21"></line></svg>
+            </button>
+          </div>
+
+          <div class="timeframe-group">
+            <button class="timeframe-btn active" data-range="1h">1H</button>
+            <button class="timeframe-btn" data-range="24h">24H</button>
+            <button class="timeframe-btn" data-range="7d">7D</button>
+            <button class="timeframe-btn" data-range="1m">1M</button>
+            <button class="timeframe-btn" data-range="1y">1Y</button>
+          </div>
+        </div>
+
+        <!-- Interactive Chart Canvas Stage -->
+        <div class="chart-stage" id="chartStage">
+          <canvas class="chart-canvas" id="mainChartCanvas"></canvas>
+          <div class="chart-tooltip" id="chartTooltip">
+            <div class="tooltip-time" id="tooltipTime">--:--</div>
+            <div class="tooltip-price" id="tooltipPrice">$0.00</div>
+          </div>
+        </div>
+
+        <!-- Technical Intelligence & Indicators Grid (4 Columns) -->
+        <div class="intel-grid">
+          <div class="intel-card">
+            <span class="intel-label">MA (20 / 50)</span>
+            <span class="intel-value" id="maValues">$2,890 / $2,865</span>
+            <span class="intel-rating" id="maSignal" style="color: var(--bull);">Bullish Cross</span>
+          </div>
+          <div class="intel-card">
+            <span class="intel-label">RSI (14)</span>
+            <span class="intel-value" id="rsiValue">58.4</span>
+            <span class="intel-rating" id="rsiSignal" style="color: var(--text-secondary);">Neutral Momentum</span>
+          </div>
+          <div class="intel-card">
+            <span class="intel-label">Sentiment</span>
+            <span class="intel-value" id="fngValue">68 / 100</span>
+            <span class="intel-rating" id="fngSignal" style="color: var(--bull);">Greed Zone</span>
+          </div>
+          <div class="intel-card intel-gauge-card">
+            <span class="intel-label">Technical Gauge</span>
+            <span class="intel-value meter-status bull" id="technicalMeterText" style="font-size: 11px;">STRONG BUY</span>
+            <div class="meter-bar-container">
+              <div class="meter-segment" id="segStrongSell" title="Strong Sell"></div>
+              <div class="meter-segment" id="segSell" title="Sell"></div>
+              <div class="meter-segment" id="segNeutral" title="Neutral"></div>
+              <div class="meter-segment" id="segBuy" title="Buy"></div>
+              <div class="meter-segment active-strong-buy" id="segStrongBuy" title="Strong Buy"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         TAB 2: WATCHLIST SCREENER
+         ========================================== -->
+    <div class="tab-content" id="tab-watchlist">
+      <div class="screener-toolbar">
+        <div class="search-input-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="search" class="search-input" id="screenerSearch" placeholder="Search Gold, BTC, Stocks...">
+        </div>
+        <select class="filter-select" id="screenerTypeFilter">
+          <option value="all">All Types</option>
+          <option value="crypto">Crypto</option>
+          <option value="commodity">Commodities</option>
+          <option value="index">Indices</option>
+          <option value="forex">Forex</option>
+        </select>
+        <button class="btn-icon" id="openAddAssetModalBtn" title="Add Custom Coin / Stock">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </div>
+
+      <div class="watchlist-list" id="watchlistContainer">
+        <!-- Rendered dynamically by popup.js -->
+      </div>
+    </div>
+
+    <!-- ==========================================
+         TAB 3: PORTFOLIO & HOLDINGS
+         ========================================== -->
+    <div class="tab-content" id="tab-portfolio">
+      <div class="portfolio-hero">
+        <div class="portfolio-label">Total Portfolio Net Worth</div>
+        <div class="portfolio-total" id="portfolioTotalVal">$48,912.45</div>
+        <div class="portfolio-metrics">
+          <div class="p-metric">
+            <span class="p-metric-label">24h P&L</span>
+            <span class="p-metric-val" id="portfolio24hPnl" style="color: var(--bull);">+$1,140.20 (+2.38%)</span>
+          </div>
+          <div class="p-metric">
+            <span class="p-metric-label">All-Time Return</span>
+            <span class="p-metric-val" id="portfolioAllTimePnl" style="color: var(--bull);">+$8,450.00 (+20.8%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Asset Allocation Donut Chart -->
+      <div class="allocation-wrap">
+        <div class="donut-stage">
+          <svg class="donut-svg" viewBox="0 0 36 36" id="portfolioDonutSvg">
+            <!-- Rendered dynamically -->
+          </svg>
+        </div>
+        <div class="donut-legend" id="donutLegend">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Holdings List -->
+      <div class="holdings-header">
+        <span class="section-heading">Your Holdings</span>
+        <button class="btn-small" id="openAddHoldingBtn">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Asset
+        </button>
+      </div>
+
+      <div id="holdingsListContainer">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+
+    <!-- ==========================================
+         TAB 4: PRICE ALERTS
+         ========================================== -->
+    <div class="tab-content" id="tab-alerts">
+      <div class="alert-builder-card">
+        <div class="section-heading" style="margin-bottom: 8px;">Create Price Alert</div>
+        <form class="alert-builder-form" id="alertBuilderForm">
+          <div class="alert-input-grid">
+            <select id="alertAssetSelect" aria-label="Target Asset"></select>
+            <select id="alertConditionSelect" aria-label="Condition">
+              <option value="above">Price Above (>=)</option>
+              <option value="below">Price Below (<=)</option>
+            </select>
+          </div>
+          <div style="margin-bottom: 8px;">
+            <input type="number" step="any" min="0" id="alertTargetInput" placeholder="Target Price (e.g. 3000.00)" required>
+          </div>
+          <button type="submit" class="btn-primary">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            Set Alert
+          </button>
+        </form>
+      </div>
+
+      <div class="section-heading" style="margin-bottom: 8px;">Active Alerts</div>
+      <div class="active-alerts-list" id="activeAlertsList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- ==========================================
+         TAB 5: SETTINGS & PREFERENCES
+         ========================================== -->
+    <div class="tab-content" id="tab-settings">
+      <div class="settings-group">
+        <div class="setting-row">
+          <div class="setting-meta">
+            <span class="setting-name">Browser Badge HUD Mode</span>
+            <span class="setting-desc">Value displayed on Chrome icon</span>
+          </div>
+          <div class="setting-control">
+            <select id="settingBadgeMode">
+              <option value="price">Price ($)</option>
+              <option value="change">24h Change (%)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <span class="setting-name">Display Currency</span>
+            <span class="setting-desc">Base fiat denomination</span>
+          </div>
+          <div class="setting-control">
+            <select id="settingCurrency">
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="JPY">JPY (¥)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <span class="setting-name">Visual Theme</span>
+            <span class="setting-desc">Terminal styling preset</span>
+          </div>
+          <div class="setting-control">
+            <select id="settingTheme">
+              <option value="obsidian">Obsidian Dark</option>
+              <option value="cyber">Cyberpunk Emerald</option>
+              <option value="midnight">Midnight Navy</option>
+              <option value="light">Crisp Light</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <span class="setting-name">Background Poll Interval</span>
+            <span class="setting-desc">Frequency of service worker checks</span>
+          </div>
+          <div class="setting-control">
+            <select id="settingInterval">
+              <option value="1">Every 1 min</option>
+              <option value="5">Every 5 mins</option>
+              <option value="15">Every 15 mins</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="section-heading" style="margin-bottom: 6px;">Data & Backup</div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-secondary" id="exportDataBtn" style="flex: 1;">
+            Export Data
+          </button>
+          <button class="btn-secondary" id="importDataBtn" style="flex: 1;">
+            Import Data
+          </button>
+          <input type="file" id="importFileInput" accept=".json" style="display: none;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- 1. Add Asset Modal -->
+    <div class="modal-overlay" id="addAssetModal">
+      <div class="modal-box">
+        <div class="modal-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Custom Asset
+        </div>
+        <div class="modal-inputs">
+          <input type="text" id="customSymbolInput" placeholder="Symbol (e.g. DOGE, NVDA, TSLA)" autocomplete="off">
+          <input type="text" id="customNameInput" placeholder="Asset Name (e.g. Dogecoin)" autocomplete="off">
+          <select id="customTypeInput">
+            <option value="crypto">Cryptocurrency</option>
+            <option value="commodity">Commodity / Metal</option>
+            <option value="index">Index / Stock</option>
+            <option value="forex">Forex Pair</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="cancelAddAssetBtn">Cancel</button>
+          <button class="btn-primary" id="confirmAddAssetBtn" style="width: auto;">Add to Watchlist</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Add / Update Holding Modal -->
+    <div class="modal-overlay" id="addHoldingModal">
+      <div class="modal-box">
+        <div class="modal-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          <span id="holdingModalTitleText">Track Asset Value</span>
+        </div>
+        <input type="hidden" id="editingHoldingId" value="">
+        <div class="modal-inputs">
+          <label style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">1. Choose Asset</label>
+          <select id="holdingAssetSelect"></select>
+          <div id="holdingCurrentPriceInfo" style="font-size: 11px; font-family: var(--font-mono); color: var(--accent-cyan); margin-top: -4px; margin-bottom: 6px;">
+            Current Market Price: $0.00
+          </div>
+
+          <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+            <button type="button" class="btn-small active" id="modeUsdBtn" style="flex: 1; justify-content: center; font-size: 10px; padding: 5px 6px;">💵 In USD ($)</button>
+            <button type="button" class="btn-small" id="modeUnitsBtn" style="flex: 1; justify-content: center; font-size: 10px; padding: 5px 6px;">🪙 By Coin/Units</button>
+          </div>
+
+          <!-- Mode 1: USD Amount (Intuitive & Default) -->
+          <div id="holdingUsdContainer">
+            <label style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">2. How much you hold in USD right now</label>
+            <input type="number" step="any" min="0" id="holdingUsdAmountInput" placeholder="e.g. 500 or 2500" autocomplete="off">
+            <div id="holdingUsdCalcPreview" style="font-size: 10.5px; font-family: var(--font-mono); color: var(--text-secondary); margin-top: 4px;">
+              ≈ 0.00 units locked at current price
+            </div>
+          </div>
+
+          <!-- Mode 2: By exact units / custom price (Optional) -->
+          <div id="holdingUnitsContainer" style="display: none;">
+            <label style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">Exact units owned</label>
+            <input type="number" step="any" min="0" id="holdingAmountInput" placeholder="Quantity (e.g. 0.035)" autocomplete="off">
+            <label style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; margin-top: 6px;">Buy Price per unit ($)</label>
+            <input type="number" step="any" min="0" id="holdingBuyPriceInput" placeholder="Price per unit ($)" autocomplete="off">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="cancelAddHoldingBtn">Cancel</button>
+          <button class="btn-primary" id="confirmAddHoldingBtn" style="width: auto;">Start Tracking</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Status Bar -->
+    <footer class="terminal-footer">
+      <div class="footer-meta">
+        <span id="lastUpdatedText">Updated: Just now</span>
+      </div>
+      <div class="footer-meta">
+        <span id="themeIndicator">Obsidian v2.0</span>
+      </div>
+    </footer>
+
   </div>
 
   <script src="config.js"></script>

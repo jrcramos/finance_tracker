@@ -44,28 +44,38 @@ async function updatePricesAndBadge() {
       item.id,
       await fetchTicker(item)
     ])));
+
     const data = prices[pinnedId];
-    if (!data) return;
+    if (data && data.lastPrice) {
+      const price = parseFloat(data.lastPrice);
+      const change = parseFloat(data.priceChangePercent || 0);
 
-    const price = parseFloat(data.lastPrice);
-    const change = parseFloat(data.priceChangePercent);
-
-    // Format badge text
-    let badgeText = '';
-    if (badgeMode === 'price') {
-      if (price >= 1000) {
-        badgeText = (price / 1000).toFixed(1) + 'k';
+      // Format badge text with precision: e.g. 79.1k, 89.4k, 2.9k, 105k
+      let badgeText = '';
+      if (badgeMode === 'price') {
+        if (price >= 100000) {
+          // 100k+
+          badgeText = (price / 1000).toFixed(0) + 'k';
+        } else if (price >= 1000) {
+          // 1,000 - 99,999: show 1 decimal place like 79.1k
+          badgeText = (price / 1000).toFixed(1) + 'k';
+        } else if (price >= 100) {
+          badgeText = price.toFixed(0);
+        } else if (price >= 10) {
+          badgeText = price.toFixed(1);
+        } else {
+          badgeText = price.toFixed(2);
+        }
       } else {
-        badgeText = price.toFixed(0);
+        const sign = change >= 0 ? '+' : '';
+        badgeText = sign + change.toFixed(1) + '%';
       }
-    } else {
-      badgeText = (change >= 0 ? '+' : '') + change.toFixed(1) + '%';
-    }
 
-    chrome.action.setBadgeText({ text: badgeText });
-    chrome.action.setBadgeBackgroundColor({
-      color: change >= 0 ? '#16a34a' : '#dc2626'
-    });
+      chrome.action.setBadgeText({ text: badgeText });
+      chrome.action.setBadgeBackgroundColor({
+        color: change >= 0 ? '#10b981' : '#f43f5e'
+      });
+    }
 
     await chrome.storage.local.set({
       [CONFIG.STORAGE_KEYS.watchlist]: watchlist,
@@ -99,9 +109,14 @@ async function fetchTicker(item) {
       const previous = meta?.chartPreviousClose;
       if (typeof price !== 'number' || typeof previous !== 'number') return null;
       const change = ((price - previous) / previous) * 100;
-      const high = Math.max(...(chart.indicators?.quote?.[0]?.high || [price]).filter(Number.isFinite));
-      const low = Math.min(...(chart.indicators?.quote?.[0]?.low || [price]).filter(Number.isFinite));
-      return { lastPrice: String(price), priceChangePercent: String(change), highPrice: String(high), lowPrice: String(low) };
+      const highs = (chart.indicators?.quote?.[0]?.high || [price]).filter(Number.isFinite);
+      const lows = (chart.indicators?.quote?.[0]?.low || [price]).filter(Number.isFinite);
+      return { 
+        lastPrice: String(price), 
+        priceChangePercent: String(change), 
+        highPrice: String(highs.length ? Math.max(...highs) : price), 
+        lowPrice: String(lows.length ? Math.min(...lows) : price) 
+      };
     }
     const symbol = item.id === 'XAUUSDT' ? 'PAXGUSDT' : item.id;
     const response = await fetch(`${CONFIG.APIS.binanceTicker}${symbol}`);
@@ -136,7 +151,7 @@ async function checkAlerts(alerts, prices) {
   if (changed) await chrome.storage.local.set({ [CONFIG.STORAGE_KEYS.alerts]: alerts });
 }
 
-// Listen for refresh requests from popup
+// Listen for refresh requests
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'refresh_now') {
     updatePricesAndBadge().then(() => sendResponse({ success: true }));
