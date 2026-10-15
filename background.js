@@ -77,8 +77,30 @@ async function updatePricesAndBadge() {
       });
     }
 
+    // Update sparkline rolling cache
+    const sparklinesRes = await chrome.storage.local.get([CONFIG.STORAGE_KEYS.sparklineCache]);
+    const sparklines = sparklinesRes[CONFIG.STORAGE_KEYS.sparklineCache] || {};
+    for (const [id, tick] of Object.entries(prices)) {
+      if (tick && tick.lastPrice) {
+        const p = parseFloat(tick.lastPrice);
+        if (!sparklines[id]) sparklines[id] = [];
+        sparklines[id].push(p);
+        if (sparklines[id].length > 20) sparklines[id].shift();
+      }
+    }
+
+    // Update Fear & Greed index if needed (> 30 mins old)
+    const fngRes = await chrome.storage.local.get([CONFIG.STORAGE_KEYS.fearAndGreedCache]);
+    let fngData = fngRes[CONFIG.STORAGE_KEYS.fearAndGreedCache];
+    if (!fngData || (Date.now() - (fngData.updatedAt || 0) > 30 * 60 * 1000)) {
+      const freshFng = await fetchFearAndGreed();
+      if (freshFng) fngData = freshFng;
+    }
+
     await chrome.storage.local.set({
       [CONFIG.STORAGE_KEYS.watchlist]: watchlist,
+      [CONFIG.STORAGE_KEYS.sparklineCache]: sparklines,
+      [CONFIG.STORAGE_KEYS.fearAndGreedCache]: fngData,
       ft_latest_prices: prices,
       ft_last_updated: Date.now()
     });
@@ -93,9 +115,29 @@ async function updatePricesAndBadge() {
 }
 
 function mergeDefaultWatchlist(savedWatchlist) {
-  if (!Array.isArray(savedWatchlist)) return CONFIG.DEFAULT_WATCHLIST;
-  const savedIds = new Set(savedWatchlist.map(item => item.id));
-  return [...savedWatchlist, ...CONFIG.DEFAULT_WATCHLIST.filter(item => !savedIds.has(item.id))];
+  if (!Array.isArray(savedWatchlist) || savedWatchlist.length === 0) {
+    return CONFIG.DEFAULT_WATCHLIST;
+  }
+  return savedWatchlist;
+}
+
+async function fetchFearAndGreed() {
+  try {
+    const res = await fetch(CONFIG.APIS.fearAndGreed);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const item = json?.data?.[0];
+    if (item && item.value) {
+      return {
+        value: parseInt(item.value, 10),
+        classification: item.value_classification || 'Neutral',
+        updatedAt: Date.now()
+      };
+    }
+  } catch (err) {
+    console.warn('F&G fetch error:', err);
+  }
+  return null;
 }
 
 async function fetchTicker(item) {

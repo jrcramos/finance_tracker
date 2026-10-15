@@ -18,50 +18,46 @@ Track **Cryptocurrencies** (BTC, ETH, SOL), **Commodities & Precious Metals** (G
 
 ## ✨ Key Features
 
-### 1. 🖥️ Zero-Scroll Terminal View (580px Canvas)
-- **Expanded Width (580px)**: Engineered to utilize maximum Chrome extension popup dimensions for a workstation experience without horizontal cramping.
-- **Zero Vertical Scrolling**: The Hero Price, 24h High/Low range slider, interactive charting canvas, timeframe controls, and technical indicators are unified on a single screen—no scrolling required.
-- **Dual Charting Engine**: Toggle between **Area Spline** and **OHLC Candlestick** visualizations with crosshair inspection tooltips across **1H, 24H, 7D, 1M, and 1Y** timeframes.
+### 1. ⚡ Live Sub-Second WebSockets Streaming & Live Beacon
+- **Direct Binance WebSocket Integration**: Subscribes directly to `wss://stream.binance.com:9443/ws/!miniTicker@arr` for sub-second, real-time tick-by-tick market data across crypto and metals.
+- **Pulsating Live Beacon**: Header beacon badge dynamically displays `WS LIVE` with a pulsing emerald radar dot when streaming, automatically falling back to polling if offline.
+- **Tick-by-Tick Animations**: Live price updates flash instantly (emerald green for upticks, rose red for downticks) on the hero card and watchlist rows. Active chart candles evolve in real-time as ticks arrive.
 
-### 2. 🎞️ Continuous Rolling Prices Ticker Tape
-- **Horizontal Market Marquee**: Smooth, unclipped 32px rolling ticker tape displaying live asset prices and color-coded 24h percentage changes.
-- **Interactive Controls**: Hover to pause the tape; click any asset to instantly inspect it in the Terminal tab.
-- **Real-Time Data Sync**: Automatically updates prices with smooth visual flash animations (green for bull upticks, red for pullbacks).
+### 2. 📊 Professional Canvas Chart Engine with MA Overlays & Crosshairs
+- **Dual Visualizations**: Switch seamlessly between smooth **Area Spline** with gradient fills and crisp **OHLC Candlesticks**.
+- **Moving Average Overlays (MA 20 / MA 50)**: Interactive toggle button (`MA`) renders cyanide (MA20) and amber (MA50) moving average curves directly onto the canvas with pill indicators.
+- **Interactive Precision Crosshairs**: Hovering over the chart displays high-contrast dashed crosshair lines, a right-axis price badge, and a top-bar **OHLCV Live Readout** (`O:`, `H:`, `L:`, `C:`, `V:`).
+- **Multi-Timeframe Analysis**: Explore data across **1H, 24H, 7D, 1M, and 1Y** intervals.
 
-### 3. 🧠 Technical Intelligence & Gauge Suite
-- **Moving Averages (MA 20 / 50)**: Live calculation with Golden Cross (bullish) and Death Cross (bearish) trend recognition.
-- **RSI (14)**: Relative Strength Index oscillator tracking Overbought (>70), Oversold (<30), and Neutral momentum zones.
-- **Market Sentiment**: Live Fear & Greed index integration (Extreme Fear, Fear, Neutral, Greed, Extreme Greed).
-- **5-Segment Technical Gauge**: Composite multi-signal telemetry meter (`STRONG BUY`, `BUY`, `NEUTRAL`, `SELL`, `STRONG SELL`) with glowing visual segments.
+### 3. 📰 Live Financial News Marquee & Rolling Ticker Tape
+- **Dual-Mode Marquee**: Interactive toggle switches between **[Prices]** and **[News 📰]** in the top scrolling marquee.
+- **Breaking News Feed**: Pulls real-time financial, macroeconomic, and crypto headlines with **BREAKING** badges and relative timestamps ("12m ago", "1h ago").
+- **Interactive Controls**: Hover to pause the scrolling marquee; click any headline to open the full story in a new tab.
 
-### 4. 💼 Intuitive USD-First Portfolio Tracker
+### 4. 🧠 Real Market Sentiment & Technical Gauge Suite
+- **Real Fear & Greed Index**: Direct integration with the Alternative.me API with live caching, showing exact scores (0–100) and sentiment classifications (`Extreme Fear`, `Fear`, `Neutral`, `Greed`, `Extreme Greed`).
+- **Technical Indicator Engine**: Real-time Relative Strength Index (RSI 14), MA crossovers, and a 5-segment telemetry gauge (`STRONG BUY`, `BUY`, `NEUTRAL`, `SELL`, `STRONG SELL`).
+
+### 5. 💼 Intuitive USD-First Portfolio Tracker
 - **No Complex Math**: Simply enter how much you hold in USD right now (e.g., "$500 in Bitcoin" or "$2,500 in Gold").
-- **Automatic Price Locking**: The engine automatically locks the current market entry price and computes exact coin/unit allocations.
-- **Real-Time P&L & Donut Allocation**: Visual SVG donut chart showing portfolio distribution alongside live dollar and percentage return tracking over time.
+- **Automatic Price Locking**: Locks current market entry prices and computes exact coin/unit allocations.
+- **Real-Time P&L & Donut Allocation**: Visual SVG donut chart showing asset distribution alongside live dollar and percentage return tracking over time.
 - **Asset Management**: Edit holding amounts with ✏️ or delete tracked positions with 🗑️ at any time.
 
-### 5. 🎯 Smart Browser Toolbar Badge
-- **High-Precision Formatting**: Displays compact, readable price metrics on the extension icon:
-  - `$79,365` displays as `79.1k` (not blindly rounded)
-  - `$2,912` displays as `2.9k`
-  - Values under $1,000 show exact digits (e.g., `455`, `104`)
-- **Background Sync**: Updates via Chrome alarms and Service Workers even when the popup window is closed.
-- **Configurable Mode**: Toggle between showing live price ($) or 24-hour percentage change (+/- %).
+### 6. 📋 Robust Watchlist & Drag-and-Drop Screener
+- **Zero "Resurrection" Bug**: Deleted assets stay deleted permanently—no default asset resurrection upon reload or background refresh.
+- **ID-Based Drag & Drop**: Seamlessly reorder assets even while filtering or searching by symbol/name.
+- **Real Sparklines**: Watchlist rows render genuine 24h price trajectories rather than randomized curves.
 
-### 6. 🔔 Price Alerts with Synthesized Web Audio Chimes
-- **Custom Thresholds**: Configure alerts for any asset crossing "Above" or "Below" a target price.
-- **Web Audio Chimes**: Built-in harmonic synthesizer generates musical sound feedback upon triggers (ascending arpeggio for bullish breaks, descending chord for bearish dips).
-- **Native Notifications**: Desktop notifications notify you immediately when alert conditions are met.
+### 7. 🎯 Smart Browser Toolbar Badge & Audio Alerts
+- **High-Precision Badge**: Displays readable price metrics on the extension icon (`79.1k`, `2.9k`, `104`).
+- **Web Audio Chimes**: Synthesizes pleasant musical audio chimes on price alerts and status changes.
+- **Background Sync**: Updates prices and evaluates alerts in the background service worker.
 
-### 7. 💻 Full-Screen Workstation Mode (`dashboard.html`)
-- Click the **Popout** button (⛶) to launch the dedicated, full-screen trading workstation for multi-monitor setups.
-- Includes live simulated order book depth, extended technical intelligence, and multi-column market overview.
+### 8. 💻 Full-Screen Workstation Mode & 4 FinTech Themes
+- **Dedicated Workstation (`dashboard.html`)**: Launch via popout (⛶) for full-screen multi-monitor setups with order depth simulation.
+- **Curated Themes**: Choose between **Obsidian**, **Cyberpunk**, **Midnight**, and **Crisp Light**.
 
-### 8. 🎨 4 Curated FinTech Themes
-- **Obsidian**: Deep stealth dark mode with cyan and neon accents (Default).
-- **Cyberpunk**: Ultra-vibrant neon palette with electric cyan and magenta highlights.
-- **Midnight**: Classic institutional navy blue and gold financial terminal.
-- **Crisp Light**: High-contrast, clean day mode with slate blue accents.
 
 ---
 

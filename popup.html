@@ -24,9 +24,9 @@
             <span class="brand-tag">PRO</span>
           </div>
         </div>
-        <div class="live-beacon">
-          <span class="beacon-dot"></span>
-          <span>LIVE</span>
+        <div class="live-beacon" id="liveBeaconWrap" title="Real-time WebSocket & Market Feed">
+          <span class="beacon-dot" id="beaconDot"></span>
+          <span id="beaconText">LIVE</span>
         </div>
       </div>
 
@@ -67,14 +67,16 @@
       </div>
     </header>
 
-    <!-- Top Scrolling Ticker Tape Marquee -->
-    <div class="marquee-container" id="marqueeContainer">
-      <div class="marquee-track" id="marqueeTrack">
-        <div class="ticker-item"><span class="ticker-sym">XAU/USD</span><span class="ticker-val">$2,912.40</span><span class="ticker-delta up">+0.85%</span></div>
-        <div class="ticker-item"><span class="ticker-sym">BTC/USD</span><span class="ticker-val">$79,365.75</span><span class="ticker-delta up">+0.78%</span></div>
-        <div class="ticker-item"><span class="ticker-sym">ETH/USD</span><span class="ticker-val">$2,850.00</span><span class="ticker-delta down">-0.45%</span></div>
-        <div class="ticker-item"><span class="ticker-sym">S&P 500</span><span class="ticker-val">5,980.20</span><span class="ticker-delta up">+0.32%</span></div>
-        <div class="ticker-item"><span class="ticker-sym">DXY</span><span class="ticker-val">104.25</span><span class="ticker-delta down">-0.15%</span></div>
+    <!-- Top Scrolling Ticker Tape Marquee & News Toggle -->
+    <div class="marquee-section">
+      <div class="marquee-mode-bar">
+        <button class="marquee-mode-btn active" id="btnMarqueePrices" title="Show Live Rolling Prices">Prices</button>
+        <button class="marquee-mode-btn" id="btnMarqueeNews" title="Show Breaking Financial & Crypto News">News 📰</button>
+      </div>
+      <div class="marquee-container" id="marqueeContainer">
+        <div class="marquee-track" id="marqueeTrack">
+          <!-- Populated dynamically -->
+        </div>
       </div>
     </div>
 
@@ -151,6 +153,9 @@
             <button class="chart-type-btn" data-type="candle" id="btnChartCandle" title="Candlestick OHLC">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="6" width="4" height="12" rx="1"></rect><line x1="7" y1="2" x2="7" y2="6"></line><line x1="7" y1="18" x2="7" y2="22"></line><rect x="15" y="4" width="4" height="10" rx="1"></rect><line x1="17" y1="1" x2="17" y2="4"></line><line x1="17" y1="14" x2="17" y2="21"></line></svg>
             </button>
+            <button class="chart-type-btn active" id="btnToggleMA" title="Toggle Moving Average Overlays (MA 20 / 50)">
+              MA
+            </button>
           </div>
 
           <div class="timeframe-group">
@@ -160,6 +165,19 @@
             <button class="timeframe-btn" data-range="1m">1M</button>
             <button class="timeframe-btn" data-range="1y">1Y</button>
           </div>
+        </div>
+
+        <!-- OHLCV & MA Crosshair Readout Bar -->
+        <div class="chart-ohlcv-bar" id="chartOhlcvBar">
+          <span class="ohlcv-item"><span class="ohlcv-lbl">O:</span> <span id="ohlcO">—</span></span>
+          <span class="ohlcv-item"><span class="ohlcv-lbl">H:</span> <span id="ohlcH">—</span></span>
+          <span class="ohlcv-item"><span class="ohlcv-lbl">L:</span> <span id="ohlcL">—</span></span>
+          <span class="ohlcv-item"><span class="ohlcv-lbl">C:</span> <span id="ohlcC">—</span></span>
+          <span class="ohlcv-item"><span class="ohlcv-lbl">V:</span> <span id="ohlcV">—</span></span>
+          <span class="ohlcv-item ohlcv-ma-legend" id="maLegendWrap">
+            <span class="ma-pill-20">● MA20</span>
+            <span class="ma-pill-50">● MA50</span>
+          </span>
         </div>
 
         <!-- Interactive Chart Canvas Stage -->

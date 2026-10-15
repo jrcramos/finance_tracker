@@ -33,7 +33,12 @@ const CONFIG = {
     currency: 'ft_currency', // 'USD', 'EUR', 'GBP', 'JPY'
     theme: 'ft_theme', // 'obsidian', 'cyber', 'midnight', 'light'
     soundEnabled: 'ft_sound_enabled',
-    activeTab: 'ft_active_tab'
+    activeTab: 'ft_active_tab',
+    marqueeMode: 'ft_marquee_mode', // 'prices' or 'news'
+    showMAs: 'ft_show_mas', // boolean
+    fearAndGreedCache: 'ft_fng_cache',
+    newsCache: 'ft_news_cache',
+    sparklineCache: 'ft_sparklines'
   },
 
   CURRENCIES: {
@@ -47,12 +52,16 @@ const CONFIG = {
   DEFAULT_PINNED_ASSET: 'XAUUSDT',
   DEFAULT_BADGE_MODE: 'price',
   DEFAULT_THEME: 'obsidian',
+  DEFAULT_MARQUEE_MODE: 'prices',
+  DEFAULT_SHOW_MAS: true,
 
   APIS: {
     binanceTicker: 'https://api.binance.com/api/v3/ticker/24hr?symbol=',
     binanceKlines: 'https://api.binance.com/api/v3/klines',
+    binanceWs: 'wss://stream.binance.com:9443/ws/!miniTicker@arr',
     yahooChart: 'https://query1.finance.yahoo.com/v8/finance/chart/',
-    fearAndGreed: 'https://api.alternative.me/fng/'
+    fearAndGreed: 'https://api.alternative.me/fng/?limit=1',
+    newsFeed: 'https://api.rss2json.com/v1/api.json?rss_url=https://cointelegraph.com/rss'
   }
 };
 
